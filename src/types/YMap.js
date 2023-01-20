@@ -207,7 +207,7 @@ export class YMap extends AbstractType {
    * Adds or updates an element with a specified key and value.
    *
    * @param {string} key The key of the element to add to this YMap
-   * @param {MapType} value The value of the element to add
+   * @param {any} value The value of the element to add
    */
   set (key, value) {
     if (this.doc !== null) {

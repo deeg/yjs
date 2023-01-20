@@ -689,7 +689,7 @@ const lengthExceeded = error.create('Length exceeded!')
  * @param {Transaction} transaction
  * @param {AbstractType<any>} parent
  * @param {number} index
- * @param {Array<Object<string,any>|Array<any>|number|null|string|Uint8Array>} content
+ * @param {any} content
  *
  * @private
  * @function

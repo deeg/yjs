@@ -857,6 +857,7 @@ export class YText extends AbstractType {
    *
    * @public
    */
+  // @ts-ignore
   applyDelta (delta, { sanitize = true } = {}) {
     if (this.doc !== null) {
       transact(this.doc, transaction => {

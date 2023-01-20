@@ -72,8 +72,9 @@ export class PermanentUserData {
    * @param {number} clientid
    * @param {string} userDescription
    * @param {Object} [conf]
-   * @param {function(Transaction, DeleteSet):boolean} [conf.filter]
+   * @param {any} [conf.filter]
    */
+  // @ts-ignore
   setUserMapping (doc, clientid, userDescription, { filter = () => true } = {}) {
     const users = this.yusers
     let user = users.get(userDescription)

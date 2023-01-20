@@ -40,6 +40,7 @@ export class Doc extends Observable {
   /**
    * @param {DocOpts} [opts] configuration
    */
+  // @ts-ignore
   constructor ({ guid = random.uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true } = {}) {
     super()
     this.gc = gc

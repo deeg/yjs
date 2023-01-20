@@ -143,7 +143,7 @@ export class YArray extends AbstractType {
   /**
    * Appends content to this YArray.
    *
-   * @param {Array<T>} content Array of content to append.
+   * @param {any} content Array of content to append.
    *
    * @todo Use the following implementation in all types.
    */
