@@ -14,12 +14,9 @@ import {
   callTypeObservers,
   transact,
   ContentEmbed,
-  GC,
   ContentFormat,
   ContentString,
   splitSnapshotAffectedStructs,
-  iterateDeletedStructs,
-  iterateStructs,
   findMarker,
   typeMapDelete,
   typeMapSet,
@@ -397,30 +394,6 @@ const cleanupFormattingGap = (transaction, start, curr, startAttributes, currAtt
     start = /** @type {Item} */ (start.right)
   }
   return cleanups
-}
-
-/**
- * @param {Transaction} transaction
- * @param {Item | null} item
- */
-const cleanupContextlessFormattingGap = (transaction, item) => {
-  // iterate until item.right is null or content
-  while (item && item.right && (item.right.deleted || !item.right.countable)) {
-    item = item.right
-  }
-  const attrs = new Set()
-  // iterate back until a content item is found
-  while (item && (item.deleted || !item.countable)) {
-    if (!item.deleted && item.content.constructor === ContentFormat) {
-      const key = /** @type {ContentFormat} */ (item.content).key
-      if (attrs.has(key)) {
-        item.delete(transaction)
-      } else {
-        attrs.add(key)
-      }
-    }
-    item = item.left
-  }
 }
 
 /**
@@ -841,56 +814,7 @@ export class YText extends AbstractType {
   _callObserver (transaction, parentSubs) {
     super._callObserver(transaction, parentSubs)
     const event = new YTextEvent(this, transaction, parentSubs)
-    const doc = transaction.doc
     callTypeObservers(this, transaction, event)
-    // If a remote change happened, we try to cleanup potential formatting duplicates.
-    if (!transaction.local) {
-      // check if another formatting item was inserted
-      let foundFormattingItem = false
-      for (const [client, afterClock] of transaction.afterState.entries()) {
-        const clock = transaction.beforeState.get(client) || 0
-        if (afterClock === clock) {
-          continue
-        }
-        iterateStructs(transaction, /** @type {Array<Item|GC>} */ (doc.store.clients.get(client)), clock, afterClock, item => {
-          if (!item.deleted && /** @type {Item} */ (item).content.constructor === ContentFormat) {
-            foundFormattingItem = true
-          }
-        })
-        if (foundFormattingItem) {
-          break
-        }
-      }
-      if (!foundFormattingItem) {
-        iterateDeletedStructs(transaction, transaction.deleteSet, item => {
-          if (item instanceof GC || foundFormattingItem) {
-            return
-          }
-          if (item.parent === this && item.content.constructor === ContentFormat) {
-            foundFormattingItem = true
-          }
-        })
-      }
-      transact(doc, (t) => {
-        if (foundFormattingItem) {
-          // If a formatting item was inserted, we simply clean the whole type.
-          // We need to compute currentAttributes for the current position anyway.
-          cleanupYTextFormatting(this)
-        } else {
-          // If no formatting attribute was inserted, we can make due with contextless
-          // formatting cleanups.
-          // Contextless: it is not necessary to compute currentAttributes for the affected position.
-          iterateDeletedStructs(t, t.deleteSet, item => {
-            if (item instanceof GC) {
-              return
-            }
-            if (item.parent === this) {
-              cleanupContextlessFormattingGap(t, item)
-            }
-          })
-        }
-      })
-    }
   }
 
   /**
